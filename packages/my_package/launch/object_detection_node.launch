@@ -1,0 +1,4 @@
+<launch>
+    <node ns="od"  pkg="my_package" type="object_detection_node.py" name="object_detection_node" output="screen" required="true">
+    </node>
+</launch>
