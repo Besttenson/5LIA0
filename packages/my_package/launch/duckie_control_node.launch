@@ -1,0 +1,4 @@
+ <launch>
+ <node ns="veh"  pkg="my_package" type="duckie_control_node.py" name="duckie_control_node" output="screen" required="true">
+    </node>
+</launch>

@@ -6,7 +6,7 @@ source /environment.sh
 dt-launchfile-init
 
 # launch publisher
-rosrun my_package publisher.py
+rosrun my_package duckie_control_node.py
 
 # wait for app to end
 dt-launchfile-join

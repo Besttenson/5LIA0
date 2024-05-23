@@ -1,4 +1,0 @@
- <launch>
- <node ns="veh"  pkg="my_package" type="twist_control_node.py" name="twist_control_node" output="screen" required="true">
-    </node>
-</launch>

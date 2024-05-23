@@ -9,7 +9,7 @@ from duckietown.dtros import DTROS, NodeType, TopicType
 from duckietown_msgs.msg import Twist2DStamped, EpisodeStart
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage
-from std_msgs.msg import String, Int16
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 
 from nn_model.constants import IMAGE_SIZE
 from nn_model.model import Wrapper
@@ -41,7 +41,10 @@ class ObjectDetectionNode(DTROS):
         #     dt_topic_type=TopicType.CONTROL
         # )
 
-        self.pub_motion_planning = rospy.Publisher('chatter', Int16, queue_size=1)
+        self.pub_motion_planning = rospy.Publisher('MotionPlanning', 
+                                                   Float32MultiArray,
+                                                   buff_size=10000000, 
+                                                   queue_size=1)
 
         episode_start_topic = f"/{self.veh}/episode_start"
         rospy.Subscriber(
@@ -104,14 +107,16 @@ class ObjectDetectionNode(DTROS):
         rgb = cv2.resize(rgb, (IMAGE_SIZE, IMAGE_SIZE))
         bboxes, classes, scores = self.model_wrapper.predict(rgb)
 
-        detection = self.det2bool(bboxes, classes, scores)
+        self.depth_estimation(bboxes, classes, scores)
+
+        # detection = self.det2bool(bboxes, classes, scores)
 
         # as soon as we get one detection we will stop forever
-        if detection:
-            self.log("Duckie pedestrian detected... stopping")
-            self.avoid_duckies = True
+        # if detection:
+        #     self.log("Duckie pedestrian detected... stopping")
+        #     self.avoid_duckies = True
 
-        self.pub_car_commands(self.avoid_duckies, image_msg.header)
+        # self.pub_car_commands(MP_list, image_msg.header)
 
         if self._debug:
             colors = {0: (0, 255, 255), 1: (0, 165, 255), 2: (0, 250, 0), 3: (0, 0, 255)}
@@ -161,9 +166,32 @@ class ObjectDetectionNode(DTROS):
 
         self.pub_motion_planning.publish(10)
 
-    def on_shutdown(self):
-        stop = Twist2DStamped(v=0.0, omega=0.0)
-        self.pub_car_cmd.publish(stop)
+    def depth_estimation(self, bbox, classes, scores):
+        # TODO: Implement depth estimation
+
+        angle = 0.3
+        distance = 10
+        object_length = abs(bbox[0]-bbox[2])
+
+        MP_command = Float32MultiArray()
+        MP_command.layout.dim = [
+            MultiArrayDimension(label="type", size=1, stride=1),
+            MultiArrayDimension(label="object_length", size=1, stride=2),
+            MultiArrayDimension(label="angle", size=1, stride=3),
+            MultiArrayDimension(label="distance", size=1, stride=4)      
+        ]
+        MP_command.layout.data_offset = 0
+
+        rospy.loginfo("Object detected: %s" % classes)
+        rospy.loginfo("data: %s" % MP_command.data)
+        # Populate the data field (example values)
+        MP_command.data = [classes, object_length, angle, distance]
+        self.pub_motion_planning.publish(MP_command)
+
+            
+    # def on_shutdown(self):
+    #     stop = Twist2DStamped(v=0.0, omega=0.0)
+    #     self.pub_motion_planning.publish(stop)
 
 if __name__ == "__main__":
     # Initialize the node

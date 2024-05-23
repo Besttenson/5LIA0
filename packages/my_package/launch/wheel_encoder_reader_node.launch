@@ -1,5 +1,0 @@
-  
-<launch>
-  <node ns="wer"  pkg="my_package" type="wheel_encoder_reader_node.py" name="wheel_encoder_reader_node" output="screen" required="true">
-    </node>
-</launch>

@@ -1,0 +1,4 @@
+ <launch>
+ <node ns="veh"  pkg="my_package" type="motion_planning_node.py" name="motion_planning_node" output="screen" required="true">
+    </node>
+</launch>
